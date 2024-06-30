@@ -325,7 +325,7 @@ class _EventsPageState extends State<EventsPage> {
                                 itemCount: showUpcomingEvents ? presentIndex : visibleEvents.length - presentIndex,
                                 shrinkWrap: true,
                                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 2,
+                                  crossAxisCount: isMobile ? 2 : 3,
                                   mainAxisSpacing: 15,
                                   crossAxisSpacing: 10,
                                   childAspectRatio: 1/0.9

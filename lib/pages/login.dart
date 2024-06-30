@@ -8,6 +8,7 @@ import 'package:ventike/api/users.dart';
 import 'package:http/http.dart' as http;
 import 'package:ventike/pages/dashboard.dart';
 import 'package:ventike/utils/args.dart';
+import 'package:ventike/utils/vars.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -86,7 +87,7 @@ class _LoginPageState extends State<LoginPage> {
         body: Center(
           child: Container(
             height: 350,
-            width: 325,
+            width: isMobile ? 325 : 425,
             decoration: BoxDecoration(
               color: const Color.fromRGBO(252, 252, 252, 0.08),
               borderRadius: BorderRadius.circular(20),

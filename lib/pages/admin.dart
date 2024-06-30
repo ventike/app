@@ -651,7 +651,7 @@ class _AdminPageState extends State<AdminPage> {
                           itemCount: visibleUsers.length,
                           shrinkWrap: true,
                           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
+                            crossAxisCount: isMobile ? 2 : 3,
                             mainAxisSpacing: 10,
                             crossAxisSpacing: 25,
                             childAspectRatio: 1.5/1
@@ -738,7 +738,7 @@ class _AdminPageState extends State<AdminPage> {
                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: [
                                             CircleAvatar(
-                                              minRadius: 28,
+                                              minRadius: isMobile ? 28 : 50,
                                             ),
                                             Expanded(
                                               child: FractionallySizedBox(

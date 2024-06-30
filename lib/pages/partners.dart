@@ -246,8 +246,8 @@ class _PartnersPageState extends State<PartnersPage> {
                             child: GridView.builder(
                               itemCount: visiblePartners.length,
                               // shrinkWrap: true,
-                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 1,
+                              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: isMobile ? 1 : 2,
                                 mainAxisSpacing: 15,
                                 crossAxisSpacing: 10,
                                 childAspectRatio: 2.05/1
