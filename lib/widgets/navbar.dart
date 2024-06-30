@@ -35,29 +35,36 @@ BottomNavigationBar generateNavigationBar(String userHash, int role, String? pro
     unselectedIconTheme: IconThemeData(
       color: Color.fromRGBO(252, 252, 252, 0.5),
     ),
-    items: role == 2 ? [
-      BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: "Dashboard"),
-      BottomNavigationBarItem(icon: Icon(Icons.handshake_rounded), label: "Partners"),
-      BottomNavigationBarItem(icon: Icon(Icons.calendar_month_rounded), label: "Events"),
-      BottomNavigationBarItem(
-        icon: GestureDetector(
-          onLongPress: () { Navigator.of(getContext()).pushNamed("/cipher", arguments: Arguments(userHash, role, profilePicture)); },
-          child: CircleAvatar()
-        ),
-        label: "Account"
-      )
-    ] : [
-      BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: "Dashboard"),
-      BottomNavigationBarItem(icon: Icon(Icons.handshake_rounded), label: "Partners"),
-      BottomNavigationBarItem(icon: Icon(Icons.calendar_month_rounded), label: "Events"),
-      BottomNavigationBarItem(icon: Icon(Icons.admin_panel_settings_rounded), label: "Admin"),
-      BottomNavigationBarItem(
-        icon: GestureDetector(
-          onLongPress: () { Navigator.of(getContext()).pushNamed("/cipher", arguments: Arguments(userHash, role, profilePicture)); },
-          child: CircleAvatar()
-        ),
-        label: "Account"
-      )
-    ],
+    items: () {
+      if (role == 2) {
+        return [
+          BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: "Dashboard"),
+          BottomNavigationBarItem(icon: Icon(Icons.handshake_rounded), label: "Partners"),
+          BottomNavigationBarItem(icon: Icon(Icons.calendar_month_rounded), label: "Events"),
+          BottomNavigationBarItem(
+            icon: GestureDetector(
+              onLongPress: () { Navigator.of(getContext()).pushNamed("/cipher", arguments: Arguments(userHash, role, profilePicture)); },
+              onTap: () {Navigator.of(getContext()).pushNamedAndRemoveUntil("/login", (route) => false);},
+              child: CircleAvatar()
+            ),
+            label: "Account"
+          )
+        ];
+      } 
+      return [
+        BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: "Dashboard"),
+        BottomNavigationBarItem(icon: Icon(Icons.handshake_rounded), label: "Partners"),
+        BottomNavigationBarItem(icon: Icon(Icons.calendar_month_rounded), label: "Events"),
+        BottomNavigationBarItem(icon: Icon(Icons.admin_panel_settings_rounded), label: "Admin"),
+        BottomNavigationBarItem(
+          icon: GestureDetector(
+            onLongPress: () { Navigator.of(getContext()).pushNamed("/cipher", arguments: Arguments(userHash, role, profilePicture)); },
+            onTap: () {Navigator.of(getContext()).pushNamedAndRemoveUntil("/login", (route) => false);},
+            child: CircleAvatar()
+          ),
+          label: "Account"
+        )
+      ];
+    }()
   );
 } 
