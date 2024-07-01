@@ -1,7 +1,9 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:ventike/api/events_data.dart';
 import 'package:ventike/utils/args.dart';
 import 'package:ventike/utils/dates.dart';
@@ -54,30 +56,66 @@ class _EventsPageState extends State<EventsPage> {
 
   Future<void> refreshEvents() async {
     Response res = await requestEvents(userHash);
-    if (res.statusCode == 200) {
-      setState(() {
-        print(res.body);
-        allEvents = jsonDecode(res.body) as List<dynamic>;
-        allEvents.sort((event1, event2) {
-          if (event2["date"] != event1["date"]) {
-            return event2["date"].compareTo(event1["date"]);
-          }
-          if (event2["start_time"] != event1["start_time"]) {
-            return event2["start_time"].compareTo(event1["start_time"]);
-          }
-          if (event2["end_time"] != event1["end_time"]) {
-            return event2["end_time"].compareTo(event1["end_time"]);
-          }
-          return 0;
+    if (this.mounted) {
+      if (res.statusCode == 200) {
+        setState(() {
+          print(res.body);
+          allEvents = jsonDecode(res.body) as List<dynamic>;
+          allEvents.sort((event1, event2) {
+            if (event2["date"] != event1["date"]) {
+              return event2["date"].compareTo(event1["date"]);
+            }
+            if (event2["start_time"] != event1["start_time"]) {
+              return event2["start_time"].compareTo(event1["start_time"]);
+            }
+            if (event2["end_time"] != event1["end_time"]) {
+              return event2["end_time"].compareTo(event1["end_time"]);
+            }
+            return 0;
+          });
+          visibleEvents = allEvents;
+          print(visibleEvents.toString());
+          determinePresentIndex();
+          print(presentIndex);
+          searchTerm = "";
         });
-        visibleEvents = allEvents;
-        print(visibleEvents.toString());
-        determinePresentIndex();
-        print(presentIndex);
-        searchTerm = "";
-      });
-    } else {
-      // TBD - Something Went Wrong
+      } else {
+        // TBD - Something Went Wrong
+      }
+    }
+  }
+
+  Future<void> exportEvents() async {
+    String? outputFile = await FilePicker.platform.saveFile(
+      dialogTitle: 'Please select an output file:',
+      fileName: 'output.json',
+    );
+
+    if (outputFile != null) {
+      List<dynamic> eventsData = [];
+
+      for (final event in visibleEvents) {
+        eventsData.add({
+          "name": event["name"],
+          "description": event["description"],
+          "date": event["date"],
+          "start_time": event["start_time"],
+          "end_time": event["end_time"],
+          "partners": () {
+            List<String> res = [];
+
+            for (final partner in event["partners"]) {
+              res.add(partner["name"]);
+            }
+
+            return res;
+          }(),
+        });
+      }
+
+      String output = jsonEncode(eventsData);
+      File file = File(outputFile);
+      file.writeAsString(output);
     }
   }
 
@@ -208,12 +246,15 @@ class _EventsPageState extends State<EventsPage> {
                       fontWeight: FontWeight.w600
                     ),
                   ),
-                  IconButton(
-                    onPressed: openSearch,
-                    icon: Icon(
-                      Icons.search_rounded,
-                      color: Color.fromRGBO(252, 252, 252, 0.95),
-                      size: 50,
+                  GestureDetector(
+                    onLongPress: exportEvents,
+                    child: IconButton(
+                      onPressed: openSearch,
+                      icon: Icon(
+                        Icons.search_rounded,
+                        color: Color.fromRGBO(252, 252, 252, 0.95),
+                        size: 50,
+                      ),
                     ),
                   )
                 ],

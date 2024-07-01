@@ -98,35 +98,37 @@ class _EditEventPageState extends State<EditEventPage> {
     }
 
     modifyEvent(userHash, id, name, description, dateString, startTimeString, endTimeString, selectedPartners).then((res) {
-      print(res.statusCode);
-      print(res.body);
+      if (this.mounted) {
+        print(res.statusCode);
+        print(res.body);
 
-      if (res.statusCode == 200) {
-        Navigator.of(context).popAndPushNamed('/events', arguments: Arguments(userHash, role, profilePicture));
-      } else if (res.statusCode == 409) {
+        if (res.statusCode == 200) {
+          Navigator.of(context).popAndPushNamed('/events', arguments: Arguments(userHash, role, profilePicture));
+        } else if (res.statusCode == 409) {
+          setState(() {
+            errorMessage = "Invalid Date/Time(s)";
+            errorMessagePadding = 15;
+            scrollController.animateTo(0, duration: Duration(seconds: 1), curve: Curves.fastOutSlowIn);
+            saveButtonEnabled = true;
+          });
+          return;
+        } else if (res.statusCode == 412) {
+          setState(() {
+            errorMessage = "Invalid Date/Time(s)";
+            errorMessagePadding = 15;
+            scrollController.animateTo(0, duration: Duration(seconds: 1), curve: Curves.fastOutSlowIn);
+            saveButtonEnabled = true;
+          });
+          return;
+        }
+
         setState(() {
-          errorMessage = "Invalid Date/Time(s)";
+          errorMessage = "Something Went Wrong";
           errorMessagePadding = 15;
           scrollController.animateTo(0, duration: Duration(seconds: 1), curve: Curves.fastOutSlowIn);
           saveButtonEnabled = true;
         });
-        return;
-      } else if (res.statusCode == 412) {
-        setState(() {
-          errorMessage = "Invalid Date/Time(s)";
-          errorMessagePadding = 15;
-          scrollController.animateTo(0, duration: Duration(seconds: 1), curve: Curves.fastOutSlowIn);
-          saveButtonEnabled = true;
-        });
-        return;
       }
-
-      setState(() {
-        errorMessage = "Something Went Wrong";
-        errorMessagePadding = 15;
-        scrollController.animateTo(0, duration: Duration(seconds: 1), curve: Curves.fastOutSlowIn);
-        saveButtonEnabled = true;
-      });
     });
   }
 
@@ -138,38 +140,50 @@ class _EditEventPageState extends State<EditEventPage> {
     });
 
     deleteEvent(userHash, id).then((res) {
-      print(res.statusCode);
-      print(res.body);
-      
+      if (this.mounted) {
+        print(res.statusCode);
+        print(res.body);
+        
 
-      if (res.statusCode == 200) {
-        Navigator.pop(context);
+        if (res.statusCode == 200) {
+          Navigator.pop(context);
+        }
+
+        setState(() {
+          errorMessage = "Something Went Wrong";
+          scrollController.animateTo(0, duration: Duration(seconds: 1), curve: Curves.fastOutSlowIn);
+          errorMessagePadding = 15;
+          deleteButtonEnabled = true;
+        });
       }
-
-      setState(() {
-        errorMessage = "Something Went Wrong";
-        scrollController.animateTo(0, duration: Duration(seconds: 1), curve: Curves.fastOutSlowIn);
-        errorMessagePadding = 15;
-        deleteButtonEnabled = true;
-      });
     });
   }
 
   void getAllPartners() async {
     Response res = await requestPartners(userHash);
-    if (res.statusCode == 200) {
-      setState(() {
-        print(res.body);
-        allPartners = jsonDecode(res.body) as List<dynamic>;
-        partnersSelected = [];
+    if (this.mounted) {
+      if (res.statusCode == 200) {
+        setState(() {
+          print(res.body);
+          allPartners = jsonDecode(res.body) as List<dynamic>;
+          partnersSelected = [];
 
-        for (final partner in allPartners) {
-          partnersSelected.add(selectedIds.contains(partner["pk"]));
-        }
-      });
-    } else {
-      // TBD - Something Went Wrong
+          for (final partner in allPartners) {
+            partnersSelected.add(selectedIds.contains(partner["pk"]));
+          }
+        });
+      } else {
+        // TBD - Something Went Wrong
+      }
     }
+  }
+
+  @override
+  void dispose() {
+    // Clean up the controller when the widget is disposed.
+    nameController.dispose();
+    descriptionController.dispose();
+    super.dispose();
   }
 
   @override

@@ -67,19 +67,21 @@ class _EditUserPageState extends State<EditUserPage> {
     }
 
     modifyUser(userHash, id, username, email, firstName, lastName, role).then((res) {
-      print(res.statusCode);
-      print(res.body);
+      if (this.mounted) {
+        print(res.statusCode);
+        print(res.body);
 
-      if (res.statusCode == 200) {
-        Navigator.of(context).popAndPushNamed('/admin', arguments: Arguments(userHash, role, profilePicture));
+        if (res.statusCode == 200) {
+          Navigator.of(context).popAndPushNamed('/admin', arguments: Arguments(userHash, role, profilePicture));
+        }
+
+        setState(() {
+          errorMessage = "Something Went Wrong";
+          errorMessagePadding = 15;
+          scrollController.animateTo(0, duration: Duration(seconds: 1), curve: Curves.fastOutSlowIn);
+          saveButtonEnabled = true;
+        });
       }
-
-      setState(() {
-        errorMessage = "Something Went Wrong";
-        errorMessagePadding = 15;
-        scrollController.animateTo(0, duration: Duration(seconds: 1), curve: Curves.fastOutSlowIn);
-        saveButtonEnabled = true;
-      });
     });
   }
 
@@ -91,20 +93,22 @@ class _EditUserPageState extends State<EditUserPage> {
     });
 
     deleteUser(userHash, id).then((res) {
-      print(res.statusCode);
-      print(res.body);
-      
+      if (this.mounted) {
+        print(res.statusCode);
+        print(res.body);
+        
 
-      if (res.statusCode == 200) {
-        Navigator.pop(context);
+        if (res.statusCode == 200) {
+          Navigator.pop(context);
+        }
+
+        setState(() {
+          errorMessage = "Something Went Wrong";
+          scrollController.animateTo(0, duration: Duration(seconds: 1), curve: Curves.fastOutSlowIn);
+          errorMessagePadding = 15;
+          deleteButtonEnabled = true;
+        });
       }
-
-      setState(() {
-        errorMessage = "Something Went Wrong";
-        scrollController.animateTo(0, duration: Duration(seconds: 1), curve: Curves.fastOutSlowIn);
-        errorMessagePadding = 15;
-        deleteButtonEnabled = true;
-      });
     });
   }
 
@@ -112,6 +116,16 @@ class _EditUserPageState extends State<EditUserPage> {
     setState(() {
       userRole = roles;
     });
+  }
+
+  @override
+  void dispose() {
+    // Clean up the controller when the widget is disposed.
+    usernameController.dispose();
+    emailController.dispose();
+    firstNameController.dispose();
+    lastNameController.dispose();
+    super.dispose();
   }
 
   @override

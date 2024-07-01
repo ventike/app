@@ -30,21 +30,23 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Future<void> getData() async {
     Response res = await requestDashboardData(userHash);
-    if (res.statusCode == 200) {
-      setState(() {
-        print(res.body);
-        final data = jsonDecode(res.body);
+    if (this.mounted) {
+      if (res.statusCode == 200) {
+        setState(() {
+          print(res.body);
+          final data = jsonDecode(res.body);
 
-        messageExists = data[1]["message"] != null;
-        
-        if (messageExists) {
-          messageTitle = data[1]["message_title"];
-          message = data[1]["message"];
-          messageIcon = data[1]["message_icon"];
-        }
-      });
-    } else {
-      // TBD - Something Went Wrong
+          messageExists = data[1]["message"] != null;
+          
+          if (messageExists) {
+            messageTitle = data[1]["message_title"];
+            message = data[1]["message"];
+            messageIcon = data[1]["message_icon"];
+          }
+        });
+      } else {
+        // TBD - Something Went Wrong
+      }
     }
   }
 

@@ -7,6 +7,7 @@ import 'package:http/http.dart';
 import 'package:ventike/api/cipher.dart';
 import 'package:ventike/api/events_data.dart';
 import 'package:ventike/utils/args.dart';
+import 'package:ventike/utils/vars.dart';
 
 class CipherPage extends StatefulWidget {
   const CipherPage({super.key});
@@ -21,23 +22,104 @@ class _CipherPageState extends State<CipherPage> {
   String? profilePicture;
 
   String apiKey = "";
+  List<dynamic> partners = [];
+  List<dynamic> events = [];
 
   List<Map<String, String>> messages = [{"role": "system", "content": 'You are a helpful assistant named Cipher. You work for a CTE company named Ventike. You respond to queries happily and kindly whilst being friendly and formal (speak in a business-like manner). You will only respond with the information given here. If you are asked about anything outside of this dataset, respectfully decline to respond.\n\nInformation:\nHow to add a partner? (Switch to the "Partners" tab, Press the "+" button in the top-right corner, Fill in all necessary information, Press the "Save" button)\nHow to modify a partner? (Switch to the "Partners" tab, Press the green "EDIT" button on the partner you would like to change, Modify any information necessary, Press the "Save" button)\nHow to add an event? (Switch to the "Events" tab, Press the "+" button in the top-right corner, Fill in all necessary information, Press the "Save" button)\nHow to modify an event? (Switch to the "Events" tab, Press the green pencil button on the event you would like to change, Modify any information necessary, Press the "Save" button)'}];
 
   TextEditingController inputController = TextEditingController();
+  ScrollController scrollController = ScrollController();
 
   bool firstRun = true;
 
   Future<void> getAPIKey() async {
     Response res = await requestAPIKey(userHash);
-    if (res.statusCode == 200) {
-      setState(() {
-        print(res.body);
-        final data = jsonDecode(res.body);
-        apiKey = data["api_key"];
-      });
-    } else {
-      // TBD - Something Went Wrong
+    if (this.mounted) {
+      if (res.statusCode == 200) {
+        setState(() {
+          print(res.body);
+          final data = jsonDecode(res.body);
+          apiKey = data["api_key"];
+        });
+      } else {
+        // TBD - Something Went Wrong
+      }
+    }
+  }
+
+  Future<void> getAIData() async {
+    Response res = await requestAIData(userHash);
+    if (this.mounted) {
+      if (res.statusCode == 200) {
+        setState(() {
+          print(res.body);
+          final data = jsonDecode(res.body);
+          apiKey = data[0]["api_key"];
+          partners = data[1];
+          events = data[2];
+
+          messages[0]["content"] = "You are a helpful assistant named Cipher. You work for a company that makes CTE (Career and Technical Education) software named Ventike. You respond to queries happily and kindly whilst being friendly and formal (speak in a business-like manner). You have been given a list of FAQs and event/partner data. You will only respond with the information given here. If you are asked about anything outside of this dataset, respectfully decline to respond. You may list and reformat this data for the users' needs.\n\nFAQs:\nHow to add a partner? (Switch to the 'Partners' tab, Press the '+' button in the top-right corner, Fill in all necessary information, Press the 'Save' button)\nHow to modify a partner? (Switch to the 'Partners' tab, Press the green 'EDIT' button on the partner you would like to change, Modify any information necessary, Press the 'Save' button)\nHow to add an event? (Switch to the 'Events' tab, Press the '+' button in the top-right corner, Fill in all necessary information, Press the 'Save' button)\nHow to modify an event? (Switch to the 'Events' tab, Press the green pencil button on the event you would like to change, Modify any information necessary, Press the 'Save' button)\nWhat is a partner? (A partner is a group that works with your CTE department. You can store their information, contact details, type of organization, contact information of an individual working for the partner, tags related to them, and the resources they have\nWhat is an event? (An event is something that occurs at a point in time that pertains to your CTE department. You can store event details and the partners that will be there)\nWhat are the different partner types? (Business, Community, Education, Other)\nWhat are the different types of resources a partner can have? (Financial, Human, Physical, Other)\n\nPartners (Name, Description, Email, Phone Number, Type of Partner, (Individual First Name, Individual Last Name, Individual Email, Individual Phone Number), (Resources(Name, Type of Resource, Quantity)), (Tags)):";
+
+
+          String partnersString = "";
+
+          for (final partner in partners) {
+            String resourcesString = "";
+            for (final resource in partner["resources"]) {
+              resourcesString = "$resourcesString, (${resource["name"]}, ${resourceTypes[resource["type"]]}, ${resource["amount"]})";
+              // resourcesString = resourcesString + ", (" + resource["name"] + ", " + resourceTypes[resource["type"]] + ", " + resource["amount"] + ")";
+            }
+
+            if (resourcesString != "") {
+              resourcesString = resourcesString.substring(2);
+            }
+
+            String tagsString = "";
+            for (final tag in partner["tags"]) {
+              tagsString = "$tagsString, ${tag["name"]}";
+              // tagsString = tagsString + ", " + tag["name"];
+            }
+
+            if (tagsString != "") {
+              tagsString = tagsString.substring(2);
+            }
+
+            partnersString = "$partnersString\n${partner["name"]}, ${partner["description"]}, ${partner["email"]}, ${partner["phone"]}, ${partnerTypes[partner["type"]]}, (${partner["individual"]["first_name"]}, ${partner["individual"]["last_name"]}, ${partner["individual"]["email"]}, ${partner["individual"]["phone"]}), ($resourcesString), ($tagsString)";
+          }
+
+          if (partnersString == "") {
+            messages[0]["content"] = "${messages[0]["content"]}\nN/A";
+          } else {
+            messages[0]["content"] = "${messages[0]["content"]}$partnersString";
+          }
+
+          messages[0]["content"] = "${messages[0]["content"]}\n\nEvents (Name, Description, Date, Start Time, End Time, (Partners Involved)):";
+
+          String eventsString = "";
+
+          for (final event in events) {
+            String partnersString = "";
+            for (final partner in event["partners"]) {
+              partnersString = "$partnersString, ${partner["name"]}";
+              // partnersString = partnersString + ", " + partner["name"];
+            }
+
+            if (partnersString != "") {
+              partnersString = partnersString.substring(2);
+            }
+
+            eventsString = "$eventsString\n${event["name"]}, ${event["description"]}, ${event["date"]}, ${event["start_time"]}, ${event["end_time"]}, ($partnersString)";
+          }
+
+          if (eventsString == "") {
+            messages[0]["content"] = "${messages[0]["content"]}\nN/A";
+          } else {
+            messages[0]["content"] = "${messages[0]["content"]}$eventsString";
+          }
+        });
+      } else {
+        // TBD - Something Went Wrong
+      }
     }
   }
 
@@ -51,22 +133,55 @@ class _CipherPageState extends State<CipherPage> {
     setState(() {
       messages.add({"role": "user", "content": input});
       inputController.text = "";
+      // scrollController.animateTo(
+      //   scrollController.position.maxScrollExtent,
+      //   duration: Duration(seconds: 1),
+      //   curve: Curves.fastOutSlowIn
+      // );
     });
 
     sendMessage(messages, apiKey).then((res) {
-      print(res.statusCode);
-      print(res.body);
+      if (this.mounted) {
+        print(res.statusCode);
+        print(res.body);
 
-      final data = jsonDecode(res.body);
+        final data = jsonDecode(res.body);
 
-      if (res.statusCode == 200) {
-        setState(() { 
-          messages.add({"role": "assistant", "content": data["choices"][0]["message"]["content"]});
-          inputController.text = "";
-        });
+        if (res.statusCode == 200) {
+          setState(() { 
+            messages.add({"role": "assistant", "content": data["choices"][0]["message"]["content"]});
+            inputController.text = "";
+            // scrollController.animateTo(
+            //   scrollController.position.maxScrollExtent,
+            //   duration: Duration(seconds: 1),
+            //   curve: Curves.fastOutSlowIn
+            // );
+          });
+        }
       }
     });
   }
+
+  // void scrollToBottom() {
+  //   scrollController.animateTo(
+  //     scrollController.position.maxScrollExtent,
+  //     duration: Duration(seconds: 1),
+  //     curve: Curves.fastOutSlowIn
+  //   );
+  // }
+
+  @override
+  void dispose() {
+    // Clean up the controller when the widget is disposed.
+    inputController.dispose();
+    super.dispose();
+  }
+
+  // @override
+  // void initState() {
+  //   WidgetsBinding.instance.addPostFrameCallback((duration) { scrollToBottom(); });
+  //   super.initState();
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -78,7 +193,8 @@ class _CipherPageState extends State<CipherPage> {
 
       // getImageString();
 
-      getAPIKey();
+      // getAPIKey();
+      getAIData();
 
       firstRun = false;
     }
@@ -122,6 +238,8 @@ class _CipherPageState extends State<CipherPage> {
       body: Container(
         padding: const EdgeInsets.all(25),
         child: SingleChildScrollView(
+          reverse: true,
+          controller: scrollController,
           child: FractionallySizedBox(
             widthFactor: 1,
             child: Column(

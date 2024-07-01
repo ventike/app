@@ -120,35 +120,38 @@ class _NewPartnerPageState extends State<NewPartnerPage> {
     }
 
     addPartner(userHash, name, description, email, phone, type, imageVal, individualFirstName, individualLastName, individualEmail, individualPhone, tags, resourceNamesVal, resourceTypesVal, resourceAmountsVal).then((res) {
-      print(res.statusCode);
-      print(res.body);
+      if (this.mounted) {
+        print(res.statusCode);
+        print(res.body);
 
-      if (res.statusCode == 200) {
-        Navigator.of(context).popAndPushNamed('/partners', arguments: Arguments(userHash, role, profilePicture));
-      } else if (res.statusCode == 405) {
+        if (res.statusCode == 200) {
+          Navigator.of(context).popAndPushNamed('/partners', arguments: Arguments(userHash, role, profilePicture));
+          print("a");
+        } else if (res.statusCode == 405) {
+          setState(() {
+            errorMessage = "Invalid Email(s)";
+            errorMessagePadding = 15;
+            scrollController.animateTo(0, duration: Duration(seconds: 1), curve: Curves.fastOutSlowIn);
+            saveButtonEnabled = true;
+          });
+          return;
+        } else if (res.statusCode == 406) {
+          setState(() {
+            errorMessage = "Invalid Phone Number(s)";
+            errorMessagePadding = 15;
+            scrollController.animateTo(0, duration: Duration(seconds: 1), curve: Curves.fastOutSlowIn);
+            saveButtonEnabled = true;
+          });
+          return;
+        }
+
         setState(() {
-          errorMessage = "Invalid Email(s)";
+          errorMessage = "Something Went Wrong";
           errorMessagePadding = 15;
           scrollController.animateTo(0, duration: Duration(seconds: 1), curve: Curves.fastOutSlowIn);
           saveButtonEnabled = true;
         });
-        return;
-      } else if (res.statusCode == 406) {
-        setState(() {
-          errorMessage = "Invalid Phone Number(s)";
-          errorMessagePadding = 15;
-          scrollController.animateTo(0, duration: Duration(seconds: 1), curve: Curves.fastOutSlowIn);
-          saveButtonEnabled = true;
-        });
-        return;
       }
-
-      setState(() {
-        errorMessage = "Something Went Wrong";
-        errorMessagePadding = 15;
-        scrollController.animateTo(0, duration: Duration(seconds: 1), curve: Curves.fastOutSlowIn);
-        saveButtonEnabled = true;
-      });
     });
   }
 
@@ -200,6 +203,27 @@ class _NewPartnerPageState extends State<NewPartnerPage> {
   //   // final data = await rootBundle.load('assets/images/questionmark.png');
   //   // await Clipboard.setData(ClipboardData(text:(const Base64Encoder.urlSafe().convert(data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes)))));
   // }
+
+  @override
+  void dispose() {
+    // Clean up the controller when the widget is disposed.
+    nameController.dispose();
+    descriptionController.dispose();
+    emailController.dispose();
+    phoneController.dispose();
+    individualFirstNameController.dispose();
+    individualLastNameController.dispose();
+    individualEmailController.dispose();
+    individualPhoneController.dispose();
+    tagsContoller.dispose();
+
+    for (int i = 0; i < resourcesCount; i++) {
+      resourceNames[i].dispose();
+      resourceAmounts[i].dispose();
+    }
+
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {

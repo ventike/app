@@ -48,27 +48,29 @@ class _AdminPageState extends State<AdminPage> {
 
   Future<void> refreshData() async {
     Response res = await requestAdminData(userHash);
-    if (res.statusCode == 200) {
-      setState(() {
-        print(res.body);
-        final data = jsonDecode(res.body) as List<dynamic>;
-        allUsers = data[0];
-        visibleUsers = allUsers;
-        searchTerm = "";
-        organization = data[1];
-        organizationNameController.text = organization["name"];
+    if (this.mounted) {
+      if (res.statusCode == 200) {
+        setState(() {
+          print(res.body);
+          final data = jsonDecode(res.body) as List<dynamic>;
+          allUsers = data[0];
+          visibleUsers = allUsers;
+          searchTerm = "";
+          organization = data[1];
+          organizationNameController.text = organization["name"];
 
-        if (organization["message"] != null) {
-          organizationMessageExists = true;
-          organizationMessageTitleController.text = organization["message_title"];
-          organizationMessageController.text = organization["message"];
-          organizationMessageIcon = organization["message_icon"];
-        } else {
-          organizationMessageExists = false;
-        }
-      });
-    } else {
-      // TBD - Something Went Wrong
+          if (organization["message"] != null) {
+            organizationMessageExists = true;
+            organizationMessageTitleController.text = organization["message_title"];
+            organizationMessageController.text = organization["message"];
+            organizationMessageIcon = organization["message_icon"];
+          } else {
+            organizationMessageExists = false;
+          }
+        });
+      } else {
+        // TBD - Something Went Wrong
+      }
     }
   }
 
@@ -102,21 +104,23 @@ class _AdminPageState extends State<AdminPage> {
     }
 
     modifyOrganization(userHash, name, organizationMessageExists ? organizationMessageTitle : null, organizationMessageExists ? organizationMessage : null, organizationMessageExists ? organizationMessageIcon : null).then((res) {
-      print(res.statusCode);
-      print(res.body);
+      if (this.mounted) {
+        print(res.statusCode);
+        print(res.body);
 
-      if (res.statusCode == 200) {
+        if (res.statusCode == 200) {
+          setState(() {
+            saveButtonEnabled = true;
+          });
+          return;
+        }
+
         setState(() {
+          errorMessage = "Something Went Wrong";
+          errorMessagePadding = 15;
           saveButtonEnabled = true;
         });
-        return;
       }
-
-      setState(() {
-        errorMessage = "Something Went Wrong";
-        errorMessagePadding = 15;
-        saveButtonEnabled = true;
-      });
     });
   }
 
@@ -193,6 +197,15 @@ class _AdminPageState extends State<AdminPage> {
         );
       }
     );
+  }
+
+  @override
+  void dispose() {
+    // Clean up the controller when the widget is disposed.
+    organizationNameController.dispose();
+    organizationMessageTitleController.dispose();
+    organizationMessageController.dispose();
+    super.dispose();
   }
 
   @override

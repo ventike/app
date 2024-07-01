@@ -1,9 +1,11 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:ventike/api/dashboard_data.dart';
 import 'package:ventike/api/partners_data.dart';
 import 'package:ventike/utils/args.dart';
@@ -34,15 +36,72 @@ class _PartnersPageState extends State<PartnersPage> {
 
   Future<void> refreshPartners() async {
     Response res = await requestPartners(userHash);
-    if (res.statusCode == 200) {
-      setState(() {
-        print(res.body);
-        allPartners = jsonDecode(res.body) as List<dynamic>;
-        visiblePartners = allPartners;
-        searchTerm = "";
-      });
-    } else {
-      // TBD - Something Went Wrong
+    if (this.mounted) {
+      if (res.statusCode == 200) {
+        if (this.mounted) {
+          setState(() {
+            print(res.body);
+            allPartners = jsonDecode(res.body) as List<dynamic>;
+            visiblePartners = allPartners;
+            searchTerm = "";
+          });
+        }
+      } else {
+        // TBD - Something Went Wrong
+      }
+    }
+  }
+
+  Future<void> exportPartners() async {
+    String? outputFile = await FilePicker.platform.saveFile(
+      dialogTitle: 'Please select an output file:',
+      fileName: 'output.json',
+    );
+
+    if (outputFile != null) {
+      List<dynamic> partnersData = [];
+
+      for (final partner in visiblePartners) {
+        partnersData.add({
+          "name": partner["name"],
+          "description": partner["description"],
+          "email": partner["email"],
+          "phone": partner["phone"],
+          "type": partnerTypes[partner["type"]],
+          "individual": {
+            "first_name": partner["individual"]["first_name"],
+            "last_name": partner["individual"]["last_name"],
+            "email": partner["individual"]["email"],
+            "phone": partner["individual"]["phone"],
+          },
+          "tags": () {
+            List<String> res = [];
+
+            for (final tag in partner["tags"]) {
+              res.add(tag["name"]);
+            }
+
+            return res;
+          }(),
+          "resources": () {
+            List<dynamic> res = [];
+
+            for (final resource in partner["resources"]) {
+              res.add({
+                "name": resource["name"],
+                "type": resourceTypes[resource["type"]],
+                "amount": resource["amount"]
+              });
+            }
+
+            return res;
+          }(),
+        });
+      }
+
+      String output = jsonEncode(partnersData);
+      File file = File(outputFile);
+      file.writeAsString(output);
     }
   }
 
@@ -193,12 +252,15 @@ class _PartnersPageState extends State<PartnersPage> {
                       fontWeight: FontWeight.w600
                     ),
                   ),
-                  IconButton(
-                    onPressed: openSearch,
-                    icon: Icon(
-                      Icons.search_rounded,
-                      color: Color.fromRGBO(252, 252, 252, 0.95),
-                      size: 50,
+                  GestureDetector(
+                    onLongPress: exportPartners,
+                    child: IconButton(
+                      onPressed: openSearch,
+                      icon: Icon(
+                        Icons.search_rounded,
+                        color: Color.fromRGBO(252, 252, 252, 0.95),
+                        size: 50,
+                      ),
                     ),
                   )
                 ],

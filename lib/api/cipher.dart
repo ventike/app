@@ -18,6 +18,21 @@ Future<http.Response> requestAPIKey(String userHash) {
   );
 }
 
+Future<http.Response> requestAIData(String userHash) {
+  final queryParameters = {
+    'user_hash': userHash,
+  };
+
+  final uri = Uri.https(domain, "${apiRoute}ai-data/", queryParameters);
+
+  return http.post(
+    uri,
+    headers: <String, String>{
+      "Content-Type": "application/json"
+    }
+  );
+}
+
 Future<http.Response> sendMessage(List<Map<String, String>> messages, String openAIKey) {
   final uri = Uri.https("api.openai.com", "/v1/chat/completions");
 
@@ -29,7 +44,12 @@ Future<http.Response> sendMessage(List<Map<String, String>> messages, String ope
     },
     body: jsonEncode({
       "model": "gpt-3.5-turbo",
-      "messages": messages
+      "messages": messages,
+      "temperature": 1,
+      "max_tokens": 4096,
+      "top_p": 1,
+      "frequency_penalty": 0,
+      "presence_penalty": 0
     })
   );
 }

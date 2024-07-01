@@ -18,8 +18,12 @@ final messageIconColorsFaded = [Color.fromRGBO(107, 212, 37, 0.05), Color.fromRG
 final messageIconColorsPartialFaded = [Color.fromRGBO(107, 212, 37, 0.7), Color.fromRGBO(255, 159, 28, 0.7), Color.fromRGBO(231, 29, 54, 0.7), Color.fromRGBO(6, 214, 160, 0.7), Color.fromRGBO(254, 228, 64, 0.7), Color.fromRGBO(0, 187, 249, 0.7), Color.fromRGBO(252, 252, 252, 0.7)];
 
 final roles = ["Owner", "Admin", "User"];
+final partnerTypes = ["Business", "Community", "Education", "Other"];
+final resourceTypes = ["Financial", "Human", "Physical", "Other"];
 
 bool isMobile = (Platform.isAndroid || Platform.isIOS);
+
+// String currentPage = "/login";
 
 // bool get isHandset = (Platform.isAndroid || Platform.isIOS) && MediaQuery.of(context).size.width < 700;
 

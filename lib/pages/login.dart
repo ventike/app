@@ -48,27 +48,29 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     requestLogin(username, password).then((res) {
-      print(res.statusCode);
-      print(res.body);
-      
+      if (this.mounted) {
+        print(res.statusCode);
+        print(res.body);
+        
 
-      if (res.statusCode == 200) {
-        final userData = jsonDecode(res.body) as Map<String, dynamic>;
-        Navigator.of(context).pushNamedAndRemoveUntil('/dashboard', (route) => false, arguments: Arguments(userData["user_hash"], userData["role"], userData["profile_picture"]));
-      } else if (res.statusCode == 401) {
+        if (res.statusCode == 200) {
+          final userData = jsonDecode(res.body) as Map<String, dynamic>;
+          Navigator.of(context).pushNamedAndRemoveUntil('/dashboard', (route) => false, arguments: Arguments(userData["user_hash"], userData["role"], userData["profile_picture"]));
+        } else if (res.statusCode == 401) {
+          setState(() {
+            errorMessage = "Invalid Credentials";
+            errorMessagePadding = 10;
+            buttonEnabled = true;
+          });
+          return;
+        }
+
         setState(() {
-          errorMessage = "Invalid Credentials";
+          errorMessage = "Something Went Wrong";
           errorMessagePadding = 10;
           buttonEnabled = true;
         });
-        return;
       }
-
-      setState(() {
-        errorMessage = "Something Went Wrong";
-        errorMessagePadding = 10;
-        buttonEnabled = true;
-      });
     });
   }
 
